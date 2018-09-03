@@ -12,6 +12,8 @@ class RepeatRecentSkill(MycroftSkill):
 
     def initialize(self):
         def on_utterance(message):
+            self.previous_stt = self.last_stt
+            self.previous_stt_time = self.last_stt_time
             self.last_stt = message.data['utterances'][0]
             self.last_stt_time = monotonic()
 
@@ -29,19 +31,19 @@ class RepeatRecentSkill(MycroftSkill):
 
     @intent_file_handler('repeat.stt.intent')
     def handle_repeat_stt(self):
-        if monotonic() - self.last_stt_time > 120:
-            self.speak_dialog('repeat.stt.old', dict(stt=self.last_stt))
+        if monotonic() - self.previous_stt_time > 120:
+            self.speak_dialog('repeat.stt.old', dict(stt=self.previous_stt))
         else:
-            self.speak_dialog('repeat.stt', dict(stt=self.last_stt))
+            self.speak_dialog('repeat.stt', dict(stt=self.previous_stt))
 
     @intent_file_handler('did.you.hear.me.intent')
     def handle_did_you_hear_me(self):
-        if monotonic() - self.last_stt_time > 60:
+        if monotonic() - self.previous_stt_time > 60:
             self.speak_dialog('did.not.hear')
             self.speak_dialog('please.repeat', expect_response=True)
         else:
             self.speak_dialog('did.hear')
-            self.speak_dialog('repeat.stt', dict(stt=self.last_stt))
+            self.speak_dialog('repeat.stt', dict(stt=self.previous_stt))
 
 
 def create_skill():
